@@ -31,6 +31,15 @@
             box-sizing: border-box;
             -webkit-user-select: none;
             user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            pointer-events: none;
         }
 
         body, html {
@@ -289,6 +298,51 @@
     <audio id="click-sound" src="../assets/clicksound.wav"></audio>
 
     <script>
+        // --- SECURITY AND DOMAIN LOCK ---
+        (function() {
+            // 1. Domain Lock
+            const allowedDomains = ['n-s-c.vercel.app', 'ilyesjarray.github.io', 'localhost', '127.0.0.1'];
+            if (!allowedDomains.includes(window.location.hostname) && window.location.hostname !== "") {
+                document.documentElement.innerHTML = '<body style="background:#000;color:#f00;display:flex;justify-content:center;align-items:center;height:100vh;font-family:monospace;font-size:20px;">SECURITY ERROR: UNAUTHORIZED DOMAIN. REDIRECTING TO OFFICIAL SERVER...</body>';
+                setTimeout(() => { window.location.href = 'https://n-s-c.vercel.app/Welcome'; }, 2000);
+                return;
+            }
+
+            // 2. Anti Right-Click & Touch hold
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
+            // 3. Anti-Keyboard Shortcuts (F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C)
+            document.addEventListener('keydown', (e) => {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && ['U', 'S', 'P'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && ['U', 'S', 'P'].includes(e.key.toUpperCase()))
+                ) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // 4. Anti-Drag/Drop
+            document.addEventListener('dragstart', e => e.preventDefault());
+            document.addEventListener('drop', e => e.preventDefault());
+
+            // 5. Aggressive Debugger Trap
+            setInterval(function() {
+                const before = new Date().getTime();
+                debugger;
+                const after = new Date().getTime();
+                if (after - before > 100) { 
+                    // Unlikely to stop an expert, but kills script execution if heavily debugged manually
+                    document.body.innerHTML = '';
+                    window.location.replace('about:blank');
+                }
+            }, 500);
+        })();
+        // --- END SECURITY ---
+
         const startOverlay = document.getElementById('start-overlay');
         const mainContainer = document.getElementById('main-container');
         const lobbyBg = document.getElementById('lobby-bg');
