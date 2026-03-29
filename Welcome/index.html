@@ -189,12 +189,87 @@
             transform: scale(1) !important;
             filter: brightness(1) !important;
         }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            z-index: 90;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .loading-container {
+            width: 60%;
+            max-width: 600px;
+        }
+
+        .loading-text {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #00d5ff; /* Cyan accent */
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .loading-bar-wrapper {
+            width: 100%;
+            height: 4px;
+            background-color: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00d5ff, #fff);
+            box-shadow: 0 0 10px rgba(0, 213, 255, 0.8);
+            transition: width 0.1s linear;
+        }
+        
+        .loading-glitch {
+            animation: glitchText 4s infinite;
+        }
+
+        @keyframes glitchText {
+            0%, 95%, 100% { opacity: 1; text-shadow: none; transform: translate(0); }
+            96% { opacity: 0.8; text-shadow: 2px 0 red, -2px 0 cyan; transform: translate(-2px, 1px); }
+            97% { opacity: 0.9; text-shadow: -2px 0 red, 2px 0 cyan; transform: translate(2px, -1px); }
+            98% { opacity: 1; text-shadow: none; transform: translate(0); }
+        }
     </style>
 </head>
 <body>
 
     <div id="start-overlay">
         <div id="start-text">System Standby - Tap to Initialize</div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="loading-container">
+            <div class="loading-text loading-glitch">
+                <span id="loading-status">INITIALIZING SYSTEMS...</span>
+                <span id="loading-percent">0%</span>
+            </div>
+            <div class="loading-bar-wrapper">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+        </div>
     </div>
 
     <div id="main-container">
@@ -225,6 +300,11 @@
 
         const themeMusic = document.getElementById('theme-music');
         const clickSound = document.getElementById('click-sound');
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingPercent = document.getElementById('loading-percent');
+        const loadingStatus = document.getElementById('loading-status');
         
         const zoneLeft = document.getElementById('zone-left');
         const zoneCenter = document.getElementById('zone-center');
@@ -254,14 +334,58 @@
 
             startOverlay.style.display = 'none';
 
-            // Preload heavy resources silently in the background
-            // The service worker will cache these instantly
-            fetch('../assets/lobby.gif').catch(() => {});
-            fetch('../assets/purchase.png').catch(() => {});
+            // Show loading screen immediately
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.pointerEvents = 'auto';
 
-            setTimeout(() => {
-                mainContainer.classList.add('fade-in');
-            }, 1000); 
+            // Preload 47MB GIF via XHR to capture download progress
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '../assets/lobby.gif', true);
+            xhr.responseType = 'blob';
+
+            xhr.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    loadingBar.style.width = percentComplete + '%';
+                    loadingPercent.textContent = Math.floor(percentComplete) + '%';
+                    
+                    if (percentComplete < 30) {
+                        loadingStatus.textContent = 'ESTABLISHING SECURE CONNECTION...';
+                    } else if (percentComplete < 60) {
+                        loadingStatus.textContent = 'DOWNLOADING CORE ASSETS...';
+                    } else if (percentComplete < 90) {
+                        loadingStatus.textContent = 'DECRYPTING RESOURCES...';
+                    } else {
+                        loadingStatus.textContent = 'FINALIZING DEPLOYMENT...';
+                    }
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200 || xhr.status === 0) { // status 0 is for cached/local responses sometimes
+                    loadingBar.style.width = '100%';
+                    loadingPercent.textContent = '100%';
+                    loadingStatus.textContent = 'SYSTEM READY.';
+
+                    // Preload smaller background asset seamlessly
+                    fetch('../assets/purchase.png').catch(() => {});
+
+                    setTimeout(() => proceedToMain(), 800); // Dramatic pause
+                } else {
+                    proceedToMain();
+                }
+            };
+
+            xhr.onerror = () => { proceedToMain(); };
+            xhr.send();
+
+            function proceedToMain() {
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    mainContainer.classList.add('fade-in');
+                }, 500); // Wait for loading screen to fade out
+            }
         });
 
         // ==========================================
