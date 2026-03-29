@@ -301,9 +301,9 @@
         // --- SECURITY AND DOMAIN LOCK ---
         (function() {
             // 1. Domain Lock
-            const allowedDomains = ['n-s-c.vercel.app', 'ilyesjarray.github.io', 'localhost', '127.0.0.1'];
-            if (!allowedDomains.includes(window.location.hostname) && window.location.hostname !== "") {
-                document.documentElement.innerHTML = '<body style="background:#000;color:#f00;display:flex;justify-content:center;align-items:center;height:100vh;font-family:monospace;font-size:20px;">SECURITY ERROR: UNAUTHORIZED DOMAIN. REDIRECTING TO OFFICIAL SERVER...</body>';
+            const allowedDomains = ['n-s-c.vercel.app', 'n.s.c.vercel.app', 'ilyesjarray.github.io', 'localhost', '127.0.0.1'];
+            if (!allowedDomains.includes(window.location.hostname)) {
+                document.documentElement.innerHTML = '<body style="background:#000;color:#f00;display:flex;justify-content:center;align-items:center;height:100vh;font-family:monospace;font-size:20px;">SECURITY ERROR: UNAUTHORIZED DOMAIN / LOCAL FILE TAMPERING. REDIRECTING...</body>';
                 setTimeout(() => { window.location.href = 'https://n-s-c.vercel.app/Welcome'; }, 2000);
                 return;
             }
