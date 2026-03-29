@@ -1,23 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="../assets/icon.png" type="image/png" />
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gateway Terminal</title>
+    <meta name="description" content="N.S-Company Full Stack package" />
+    <meta name="keywords" content="NEYDRA, Imagination, Reality, Web Development, Exchange tnd, Trading" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#000000">
+    <meta property="og:description" content="N.S-Company" />
+    <meta name="msapplication-navbutton-color" content="#000000">
+    <meta property="og:image" content="https://raw.githubusercontent.com/ilyesjarray/Neydra-assets/main/og-image3.jpg" />
+    <meta property="og:image:secure_url" content="https://raw.githubusercontent.com/ilyesjarray/Neydra-assets/main/og-image3.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://n.s.c.vercel.app" />
+    <title>N.S-Company</title>
     <style>
         /* Reset and Base Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
             user-select: none;
         }
 
         body, html {
             width: 100%;
             height: 100%;
-            background-color: #0d0d0d; /* Deep charcoal background */
+            background-color: #000000;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
@@ -60,7 +74,7 @@
             background-color: #000;
         }
 
-        /* The Background Image with Fixed Animations */
+        /* 1. Base Lobby Image */
         #lobby-bg {
             position: absolute;
             top: 0;
@@ -68,9 +82,63 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* Default PNG idle animation */
             animation: idlePulse 4s ease-in-out infinite alternate;
             transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        /* Proximity Glow Layers */
+        .glow-layer {
+            position: absolute;
+            top: 0;
+            width: 45%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2; /* Above bg, below gif/click zones */
+            mix-blend-mode: screen; /* High-end lighting blend */
+            transition: opacity 0.15s ease-out; /* Smooth tracking */
+        }
+
+        #glow-left {
+            left: 0;
+            /* Cyan gradient */
+            background: radial-gradient(circle at 0% 50%, rgba(0, 213, 255, 0.6) 0%, rgba(0, 213, 255, 0) 70%);
+        }
+
+        #glow-right {
+            right: 0;
+            /* Red gradient */
+            background: radial-gradient(circle at 100% 50%, rgba(255, 0, 0, 0.6) 0%, rgba(255, 0, 0, 0) 70%);
+        }
+
+        /* 2. GIF Overlay Layer */
+        #lobby-gif {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0; 
+            z-index: 3; 
+            pointer-events: none; 
+        }
+
+        /* 3. NEW: Purchase Screen Overlay */
+        #purchase-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            z-index: 20; /* High z-index to cover everything and capture clicks */
+            pointer-events: none; /* Initially unclickable */
+            animation: idlePulse 4s ease-in-out infinite alternate;
+            transition: opacity 1s ease;
+            cursor: pointer;
         }
 
         /* Click Zones */
@@ -82,39 +150,25 @@
             cursor: pointer;
         }
 
-        /* Divided into 3 sections now: Left, Center, Right */
-        #zone-left {
-            left: 0;
-            width: 30%;
-        }
-
-        #zone-center {
-            left: 30%;
-            width: 40%;
-        }
-
-        #zone-right {
-            right: 0;
-            width: 30%;
-        }
+        #zone-left { left: 0; width: 30%; }
+        #zone-center { left: 30%; width: 40%; }
+        #zone-right { right: 0; width: 30%; }
 
         /* Animations */
         @keyframes pulseText {
             0% { opacity: 0.3; }
-            50% { opacity: 1; text-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+            50% { opacity: 1; text-shadow: 0 0 10px rgb(255, 255, 255); }
             100% { opacity: 0.3; }
         }
 
-        /* Custom fixed animation for the PNG */
         @keyframes idlePulse {
             0% { 
                 filter: brightness(0.85) contrast(1.1) drop-shadow(0 0 0px rgba(255, 0, 0, 0)); 
                 transform: scale(1);
             }
             100% { 
-                /* Glowing brightness and subtle aggressive red shadow */
                 filter: brightness(1.15) contrast(1.2) drop-shadow(0 0 25px rgba(255, 0, 0, 0.4)); 
-                transform: scale(1.02); /* Very slight zoom breathing effect */
+                transform: scale(1.02);
             }
         }
 
@@ -139,20 +193,31 @@
     </div>
 
     <div id="main-container">
-        <img src="assets/lobby.png" id="lobby-bg" alt="Lobby Environment">
+        <img src="../assets/lobby.png" id="lobby-bg" alt="Lobby Environment">
+        <div id="glow-left" class="glow-layer"></div>
+        <div id="glow-right" class="glow-layer"></div>
+        
+        <img src="" id="lobby-gif" alt="Lobby Action"> 
+        <img src="../assets/purchase.png" id="purchase-bg" alt="Purchase Required">
         
         <div id="zone-left" class="click-zone"></div>
         <div id="zone-center" class="click-zone"></div>
         <div id="zone-right" class="click-zone"></div>
     </div>
 
-    <audio id="theme-music" src="assets/thememusic.mp3" loop></audio>
-    <audio id="click-sound" src="assets/clicksound.wav"></audio>
+    <audio id="theme-music" src="../assets/thememusic.mp3" loop></audio>
+    <audio id="click-sound" src="../assets/clicksound.wav"></audio>
 
     <script>
         const startOverlay = document.getElementById('start-overlay');
         const mainContainer = document.getElementById('main-container');
         const lobbyBg = document.getElementById('lobby-bg');
+        const lobbyGif = document.getElementById('lobby-gif'); 
+        const purchaseBg = document.getElementById('purchase-bg'); // New element
+        
+        const glowLeft = document.getElementById('glow-left');
+        const glowRight = document.getElementById('glow-right');
+
         const themeMusic = document.getElementById('theme-music');
         const clickSound = document.getElementById('click-sound');
         
@@ -179,7 +244,7 @@
         startOverlay.addEventListener('click', () => {
             requestFullScreen();
             lockLandscape();
-            themeMusic.volume = 0.5;
+            themeMusic.volume = 1.0;
             themeMusic.play();
 
             startOverlay.style.display = 'none';
@@ -189,52 +254,99 @@
             }, 1000); 
         });
 
-        // Navigation Logic
+        // ==========================================
+        // PROXIMITY GLOW LOGIC (Mouse Tracking)
+        // ==========================================
+        document.addEventListener('mousemove', (e) => {
+            const width = window.innerWidth;
+            const mouseX = e.clientX;
+            
+            // Effect activates when mouse is within 40% of either screen edge
+            const triggerDistance = width * 0.4; 
+
+            if (mouseX < triggerDistance) {
+                // Mouse is on the left (Sovereign - Cyan)
+                const intensity = 1 - (mouseX / triggerDistance);
+                glowLeft.style.opacity = intensity;
+                glowRight.style.opacity = 0;
+            } 
+            else if (mouseX > width - triggerDistance) {
+                // Mouse is on the right (Neydra - Red)
+                const intensity = 1 - ((width - mouseX) / triggerDistance);
+                glowRight.style.opacity = intensity;
+                glowLeft.style.opacity = 0;
+            } 
+            else {
+                // Mouse is dead center
+                glowLeft.style.opacity = 0;
+                glowRight.style.opacity = 0;
+            }
+        });
+
+
+        // ==========================================
+        // NAVIGATION LOGIC
+        // ==========================================
         function handleNavigation(url) {
             clickSound.currentTime = 0;
             clickSound.play();
             setTimeout(() => { window.location.href = url; }, 300);
         }
 
-        // Left (-x) -> The Sovereign
         zoneLeft.addEventListener('click', () => handleNavigation('https://thesovereign.vercel.app'));
-
-        // Right (+x) -> Neydra
         zoneRight.addEventListener('click', () => handleNavigation('https://neydra.vercel.app'));
 
-        // Center Click Logic for GIF playback
+        // ==========================================
+        // CENTER CLICK & PURCHASE SCREEN LOGIC
+        // ==========================================
         let isGifPlaying = false;
+        let isPurchaseScreenActive = false;
         
-        // IMPORTANT: Set this to match the exact duration of your GIF in milliseconds
-        const gifDurationMs = 2000; 
+        const gifDurationMs = 3000; // MUST MATCH EXACT GIF LENGTH
 
         zoneCenter.addEventListener('click', () => {
-            // Prevent multiple triggers while the animation is already running
-            if (isGifPlaying) return; 
+            if (isGifPlaying || isPurchaseScreenActive) return; 
+            
             isGifPlaying = true;
-
-            // Optional: play click sound for center interaction too
             clickSound.currentTime = 0;
             clickSound.play();
 
-            // Pause the PNG breathing animation so the GIF plays normally
+            // Pause the PNG breathing animation
             lobbyBg.classList.add('animation-paused');
 
-            // 1. Play forward GIF
-            lobbyBg.src = 'assets/lobby.gif';
+            // 1. Play GIF
+            lobbyGif.style.transition = 'none';
+            lobbyGif.style.opacity = 1;
+            lobbyGif.src = '../assets/lobby.gif?t=' + new Date().getTime();
 
-            // 2. Wait for forward GIF to finish, then play reverse GIF
+            // 2. Wait for GIF to finish, then show Purchase screen
             setTimeout(() => {
-                lobbyBg.src = 'assets/lobby_reverse.gif';
-                
-                // 3. Wait for reverse GIF to finish, return to PNG
-                setTimeout(() => {
-                    lobbyBg.src = 'assets/lobby.png';
-                    lobbyBg.classList.remove('animation-paused'); // Resume PNG idle animation
-                    isGifPlaying = false; // Unlock center zone
-                }, gifDurationMs);
-
+                purchaseBg.style.opacity = 1;
+                purchaseBg.style.pointerEvents = 'auto'; // Make it clickable
+                isPurchaseScreenActive = true;
+                isGifPlaying = false; 
             }, gifDurationMs);
+        });
+
+        // 3. User clicks ANYWHERE on the purchase screen to dismiss it
+        purchaseBg.addEventListener('click', () => {
+            if (!isPurchaseScreenActive) return;
+            
+            clickSound.currentTime = 0;
+            clickSound.play();
+            
+            // Fade out both the purchase overlay and the underlying GIF layer
+            purchaseBg.style.opacity = 0;
+            purchaseBg.style.pointerEvents = 'none'; 
+            
+            lobbyGif.style.transition = 'opacity 1s ease';
+            lobbyGif.style.opacity = 0;
+            
+            // 4. Wait for fade to finish, then un-pause the original background
+            setTimeout(() => {
+                lobbyBg.classList.remove('animation-paused'); // Resume PNG idle animation
+                isPurchaseScreenActive = false;
+            }, 1000); // Wait 1s for the CSS transition to finish
         });
     </script>
 </body>
