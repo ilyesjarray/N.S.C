@@ -41,7 +41,7 @@ self.addEventListener('activate', (event) => {
 // Fetch: serve from cache, fall back to network
 self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
+        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
             if (cachedResponse) {
                 return cachedResponse;
             }
@@ -50,7 +50,10 @@ self.addEventListener('fetch', (event) => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
+                        // Strip query parameters for the cache key so it matches correctly
+                        const url = new URL(event.request.url);
+                        url.search = '';
+                        cache.put(url, responseClone);
                     });
                 }
                 return networkResponse;

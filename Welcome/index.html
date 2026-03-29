@@ -254,6 +254,11 @@
 
             startOverlay.style.display = 'none';
 
+            // Preload heavy resources silently in the background
+            // The service worker will cache these instantly
+            fetch('../assets/lobby.gif').catch(() => {});
+            fetch('../assets/purchase.png').catch(() => {});
+
             setTimeout(() => {
                 mainContainer.classList.add('fade-in');
             }, 1000); 
