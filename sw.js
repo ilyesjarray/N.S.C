@@ -7,7 +7,7 @@ const ASSETS_TO_CACHE = [
     './assets/icon.png',
     './assets/icon-192.png',
     './assets/icon-512.png',
-    './assets/lobby.png',
+    './assets/lobby.gif',
     './assets/purchase.png',
     './assets/thememusic.mp3',
     './assets/clicksound.wav',

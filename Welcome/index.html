@@ -282,7 +282,7 @@
     </div>
 
     <div id="main-container">
-        <img src="../assets/lobby.png" id="lobby-bg" alt="Lobby Environment">
+        <img src="../assets/lobby.gif" id="lobby-bg" alt="Lobby Environment">
         <div id="glow-left" class="glow-layer"></div>
         <div id="glow-right" class="glow-layer"></div>
         
@@ -394,7 +394,7 @@
 
             // Preload 47MB GIF via XHR to capture download progress
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../assets/lobby.gif', true);
+            xhr.open('GET', '../assets/lobby2.gif', true);
             xhr.responseType = 'blob';
 
             xhr.onprogress = (event) => {
@@ -505,7 +505,7 @@
             // 1. Play GIF
             lobbyGif.style.transition = 'none';
             lobbyGif.style.opacity = 1;
-            lobbyGif.src = '../assets/lobby.gif?t=' + new Date().getTime();
+            lobbyGif.src = '../assets/lobby2.gif?t=' + new Date().getTime();
 
             // 2. Wait for GIF to finish, then show Purchase screen
             setTimeout(() => {
