@@ -1,0 +1,459 @@
+/* ================================================
+   N.S Company — Astro-Native Animation System
+   ================================================
+   All animations leverage CSS custom properties,
+   hardware-accelerated transforms, and will-change
+   hints for optimal 60fps performance in Astro's
+   zero-JS-by-default architecture.
+   ================================================ */
+
+/* ---------- Design Tokens ---------- */
+:root {
+    --clr-bg: #000000;
+    --clr-text: #ffffff;
+    --clr-cyan: #00d5ff;
+    --clr-red: #ff0000;
+    --clr-glow-cyan: rgba(0, 213, 255, 0.6);
+    --clr-glow-red: rgba(255, 0, 0, 0.6);
+    --clr-bar-track: #1a1a1a;
+
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --dur-fast: 150ms;
+    --dur-normal: 400ms;
+    --dur-slow: 1000ms;
+    --dur-cinematic: 3000ms;
+}
+
+/* ---------- Reset & Base ---------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+img,
+video {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    pointer-events: none;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    background-color: var(--clr-bg);
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ================================================
+   1. START OVERLAY — Cinematic Entry Gate
+   ================================================ */
+#start-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    z-index: 100;
+    cursor: pointer;
+    transition: opacity 0.8s var(--ease-cinematic);
+    will-change: opacity;
+}
+
+#start-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, var(--clr-bg) 80%);
+    animation: overlayVignette 6s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes overlayVignette {
+    0% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 0.8;
+    }
+}
+
+#start-text {
+    font-size: 1.2rem;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    opacity: 0;
+    position: relative;
+    z-index: 1;
+    animation: textReveal 1.5s var(--ease-cinematic) forwards,
+        textPulse 3s var(--ease-smooth) 1.5s infinite;
+}
+
+@keyframes textReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+        letter-spacing: 12px;
+        filter: blur(8px);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: translateY(0);
+        letter-spacing: 6px;
+        filter: blur(0);
+    }
+}
+
+@keyframes textPulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        text-shadow: 0 0 0 transparent;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow:
+            0 0 20px rgba(255, 255, 255, 0.5),
+            0 0 40px rgba(0, 213, 255, 0.3);
+    }
+}
+
+/* ================================================
+   2. LOADING OVERLAY — Cyber HUD
+   ================================================ */
+#loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s var(--ease-smooth);
+    font-family: 'Courier New', Courier, monospace;
+    will-change: opacity;
+}
+
+#loading-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 213, 255, 0.03) 2px,
+            rgba(0, 213, 255, 0.03) 4px);
+    animation: scanlines 4s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes scanlines {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(4px);
+    }
+}
+
+.loading-container {
+    width: 60%;
+    max-width: 600px;
+    position: relative;
+    z-index: 2;
+}
+
+.loading-text {
+    font-size: 1rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    color: var(--clr-cyan);
+    display: flex;
+    justify-content: space-between;
+}
+
+.loading-bar-wrapper {
+    width: 100%;
+    height: 4px;
+    background-color: var(--clr-bar-track);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-bar-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(0, 213, 255, 0.4) 50%,
+            transparent 100%);
+    width: 40%;
+    animation: barShimmer 1.5s var(--ease-smooth) infinite;
+}
+
+@keyframes barShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(350%);
+    }
+}
+
+.loading-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--clr-cyan), var(--clr-text));
+    box-shadow:
+        0 0 10px rgba(0, 213, 255, 0.8),
+        0 0 30px rgba(0, 213, 255, 0.3);
+    transition: width 0.1s linear;
+    position: relative;
+    z-index: 1;
+}
+
+.loading-glitch {
+    animation: glitchText 4s infinite;
+}
+
+@keyframes glitchText {
+
+    0%,
+    93%,
+    100% {
+        opacity: 1;
+        text-shadow: none;
+        transform: translate(0);
+    }
+
+    94% {
+        opacity: 0.8;
+        text-shadow: 3px 0 var(--clr-red), -3px 0 var(--clr-cyan);
+        transform: translate(-3px, 1px) skewX(-2deg);
+    }
+
+    96% {
+        opacity: 0.6;
+        text-shadow: -2px 0 var(--clr-red), 2px 0 var(--clr-cyan);
+        transform: translate(3px, -1px) skewX(1deg);
+    }
+
+    97% {
+        opacity: 1;
+        text-shadow: 1px 0 var(--clr-red), -1px 0 var(--clr-cyan);
+        transform: translate(1px, 0);
+    }
+}
+
+/* ================================================
+   3. MAIN CONTAINER — Cinematic Reveal
+   ================================================ */
+#main-container {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-color: var(--clr-bg);
+    will-change: opacity;
+}
+
+/* ================================================
+   4. LOBBY BACKGROUND VIDEO — Breathing Pulse
+   ================================================ */
+#lobby-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    will-change: filter, transform;
+    transition: opacity 0.5s var(--ease-smooth);
+}
+
+@keyframes lobbyBreath {
+    0% {
+        filter: brightness(0.85) contrast(1.05) saturate(0.95);
+        transform: scale(1);
+    }
+
+    50% {
+        filter: brightness(1.0) contrast(1.1) saturate(1.0);
+        transform: scale(1.008);
+    }
+
+    100% {
+        filter: brightness(1.12) contrast(1.15) saturate(1.05) drop-shadow(0 0 20px rgba(195, 0, 255, 0.281));
+        transform: scale(1.015);
+    }
+}
+
+/* ================================================
+   5. PROXIMITY GLOW LAYERS — Edge Lighting
+   ================================================ */
+.glow-layer {
+    position: absolute;
+    top: 0;
+    width: 45%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: screen;
+    transition: opacity var(--dur-fast) ease-out;
+    will-change: opacity;
+}
+
+#glow-left {
+    left: 0;
+    background: radial-gradient(ellipse at 0% 50%,
+            var(--clr-glow-cyan) 0%,
+            rgba(0, 213, 255, 0.2) 40%,
+            transparent 70%);
+}
+
+#glow-right {
+    right: 0;
+    background: radial-gradient(ellipse at 100% 50%,
+            var(--clr-glow-red) 0%,
+            rgba(255, 0, 0, 0.2) 40%,
+            transparent 70%);
+}
+
+/* ================================================
+   6. ACTION VIDEO OVERLAY (lobby2 / lobby3)
+   ================================================ */
+#lobby-action {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    z-index: 3;
+    pointer-events: none;
+    will-change: opacity;
+    transition: opacity var(--dur-slow) var(--ease-cinematic);
+}
+
+/* ================================================
+   7. PURCHASE OVERLAY
+   ================================================ */
+#purchase-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    z-index: 20;
+    pointer-events: none;
+    cursor: pointer;
+    will-change: opacity, filter, transform;
+    animation: purchaseBreath 4s var(--ease-smooth) infinite alternate;
+    transition: opacity var(--dur-slow) var(--ease-cinematic);
+}
+
+@keyframes purchaseBreath {
+    0% {
+        filter: brightness(0.9) contrast(1.05);
+        transform: scale(1);
+    }
+
+    100% {
+        filter: brightness(1.1) contrast(1.15) drop-shadow(0 0 20px rgba(255, 0, 0, 0.3));
+        transform: scale(1.01);
+    }
+}
+
+/* ================================================
+   8. CLICK ZONES
+   ================================================ */
+.click-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    z-index: 10;
+    cursor: pointer;
+}
+
+#zone-left {
+    left: 0;
+    width: 30%;
+}
+
+#zone-center {
+    left: 30%;
+    width: 40%;
+}
+
+#zone-right {
+    right: 0;
+    width: 30%;
+}
+
+/* ================================================
+   9. STATE-DRIVEN UTILITY CLASSES
+   ================================================ */
+
+/* Cinematic 3s fade-in for main container */
+.fade-in {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: opacity var(--dur-cinematic) var(--ease-cinematic) !important;
+}
+
+/* Freeze breathing while action video plays */
+.animation-paused {
+    animation: none !important;
+    transform: scale(1) !important;
+    filter: brightness(1) contrast(1) saturate(1) !important;
+}
+
+/* Active state for action video */
+.video-active {
+    opacity: 1 !important;
+    transition: none !important;
+}
+
+/* Smooth fade-out for action video after return */
+.video-fade-out {
+    opacity: 0 !important;
+    transition: opacity var(--dur-slow) var(--ease-cinematic) !important;
+}
+
+/* Purchase overlay visible state */
+.purchase-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}

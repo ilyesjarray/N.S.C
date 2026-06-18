@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Redirecting...">
+    <Fragment slot="head">
+        <meta http-equiv="refresh" content="0; url=/Welcome" />
+    </Fragment>
+    <p>Redirecting to <a href="/Welcome">Welcome</a>...</p>
+</Layout>

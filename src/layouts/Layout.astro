@@ -1,0 +1,96 @@
+---
+interface Props {
+    title: string;
+    description?: string;
+}
+
+const {
+    title,
+    description = 'N.S-Company Full Stack package',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="N.S Company" />
+
+    <!-- SEO -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content="NEYDRA, Imagination, Reality, Web Development, Exchange tnd, Trading" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="msapplication-navbutton-color" content="#000000" />
+
+    <!-- Open Graph -->
+    <meta property="og:description" content="N.S-Company" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/ilyesjarray/Neydra-assets/main/og-image3.jpg" />
+    <meta property="og:image:secure_url" content="https://raw.githubusercontent.com/ilyesjarray/Neydra-assets/main/og-image3.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://n-s-c.vercel.app" />
+
+    <!-- Page-specific head content -->
+    <slot name="head" />
+
+    <!-- Security & Domain Lock (runs immediately, no bundling) -->
+    <script is:inline>
+        (function() {
+            // 1. Domain Lock
+            var allowedDomains = ['n-s-c.vercel.app', 'n.s.c.vercel.app', 'ilyesjarray.github.io', 'localhost', '127.0.0.1'];
+            if (!allowedDomains.includes(window.location.hostname)) {
+                document.documentElement.innerHTML = '<body style="background:#000;color:#f00;display:flex;justify-content:center;align-items:center;height:100vh;font-family:monospace;font-size:20px;">SECURITY ERROR: UNAUTHORIZED DOMAIN / LOCAL FILE TAMPERING. REDIRECTING...</body>';
+                setTimeout(function() { window.location.href = 'https://n-s-c.vercel.app/Welcome'; }, 2000);
+                return;
+            }
+
+            // 2. Anti Right-Click & Touch hold
+            document.addEventListener('contextmenu', function(event) { event.preventDefault(); });
+
+            // 3. Anti-Keyboard Shortcuts (F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C)
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && ['U', 'S', 'P'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && ['U', 'S', 'P'].includes(e.key.toUpperCase()))
+                ) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // 4. Anti-Drag/Drop
+            document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+            document.addEventListener('drop', function(e) { e.preventDefault(); });
+
+            // 5. Aggressive Debugger Trap
+            setInterval(function() {
+                var before = new Date().getTime();
+                debugger;
+                var after = new Date().getTime();
+                if (after - before > 100) {
+                    document.body.innerHTML = '';
+                    window.location.replace('about:blank');
+                }
+            }, 500);
+        })();
+    </script>
+</head>
+<body>
+    <slot />
+</body>
+</html>

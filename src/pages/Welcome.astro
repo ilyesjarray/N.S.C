@@ -1,0 +1,319 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import purchaseImg from '../assets/purchase.webp';
+import '../styles/welcome.css';
+---
+
+<Layout title="N.S-Company">
+
+    <!-- 1. Start Overlay — Cinematic entry gate -->
+    <div id="start-overlay">
+        <div id="start-text">System Standby - Tap to Initialize</div>
+    </div>
+
+    <!-- 2. Loading Overlay — Cyber HUD with scanlines -->
+    <div id="loading-overlay">
+        <div class="loading-container">
+            <div class="loading-text loading-glitch">
+                <span id="loading-status">INITIALIZING SYSTEMS...</span>
+                <span id="loading-percent">0%</span>
+            </div>
+            <div class="loading-bar-wrapper">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Main Container — The lobby environment -->
+    <div id="main-container">
+
+        <!-- Base lobby loop (muted for autoplay compliance, unmuted after interaction) -->
+        <video id="lobby-bg" autoplay loop muted playsinline>
+            <source src="/lobby.webm" type="video/webm" />
+        </video>
+
+        <!-- Proximity glow edges -->
+        <div id="glow-left" class="glow-layer"></div>
+        <div id="glow-right" class="glow-layer"></div>
+
+        <!-- Action/return video overlay (NOT muted — plays with full audio) -->
+        <video id="lobby-action" playsinline></video>
+
+        <!-- Purchase overlay image (now .webp) -->
+        <Image
+            src={purchaseImg}
+            id="purchase-bg"
+            alt="Purchase Required"
+            widths={[640, 1280, 1920]}
+            sizes="100vw"
+            format="webp"
+            quality={90}
+        />
+
+        <!-- Click zones -->
+        <div id="zone-left" class="click-zone"></div>
+        <div id="zone-center" class="click-zone"></div>
+        <div id="zone-right" class="click-zone"></div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="theme-music" src="/thememusic.mp3" loop preload="auto"></audio>
+    <audio id="click-sound" src="/clicksound.wav" preload="auto"></audio>
+
+    <!-- ============================================
+         CLIENT-SIDE CONTROLLER
+         is:inline preserves exact DOM execution order
+         ============================================ -->
+    <script is:inline>
+    (function() {
+        'use strict';
+
+        // ── DOM References ──
+        const $ = (id) => document.getElementById(id);
+
+        const startOverlay   = $('start-overlay');
+        const loadingOverlay = $('loading-overlay');
+        const loadingBar     = $('loading-bar');
+        const loadingPercent = $('loading-percent');
+        const loadingStatus  = $('loading-status');
+        const mainContainer  = $('main-container');
+        const lobbyBg        = $('lobby-bg');
+        const lobbyAction    = $('lobby-action');
+        const purchaseBg     = $('purchase-bg');
+        const glowLeft       = $('glow-left');
+        const glowRight      = $('glow-right');
+        const themeMusic     = $('theme-music');
+        const clickSound     = $('click-sound');
+        const zoneLeft       = $('zone-left');
+        const zoneCenter     = $('zone-center');
+        const zoneRight      = $('zone-right');
+
+        // ── State ──
+        let isVideoPlaying = false;
+        let isPurchaseActive = false;
+        let lobby2BlobUrl = '';
+
+        // ── Utility ──
+        function playClick() {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        }
+
+        async function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                try { await screen.orientation.lock('landscape'); }
+                catch (e) { /* unsupported */ }
+            }
+        }
+
+        function requestFullScreen() {
+            const d = document.documentElement;
+            (d.requestFullscreen || d.webkitRequestFullScreen || d.msRequestFullscreen || function(){}).call(d);
+        }
+
+        // ==========================================
+        // PHASE 1: INITIALIZATION (Tap to Start)
+        // ==========================================
+        startOverlay.addEventListener('click', () => {
+            requestFullScreen();
+            lockLandscape();
+
+            // Start theme music at full volume
+            themeMusic.volume = 1.0;
+            themeMusic.play();
+
+            // Dismiss start overlay
+            startOverlay.style.opacity = '0';
+            startOverlay.style.pointerEvents = 'none';
+            setTimeout(() => { startOverlay.style.display = 'none'; }, 800);
+
+            // Show loading HUD
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.pointerEvents = 'auto';
+
+            // Preload lobby2 with XHR progress tracking
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/lobby2.webm', true);
+            xhr.responseType = 'blob';
+
+            xhr.onprogress = (event) => {
+                if (!event.lengthComputable) return;
+                const pct = (event.loaded / event.total) * 100;
+                loadingBar.style.width = pct + '%';
+                loadingPercent.textContent = Math.floor(pct) + '%';
+
+                if      (pct < 30) loadingStatus.textContent = 'ESTABLISHING SECURE CONNECTION...';
+                else if (pct < 60) loadingStatus.textContent = 'DOWNLOADING CORE ASSETS...';
+                else if (pct < 90) loadingStatus.textContent = 'DECRYPTING RESOURCES...';
+                else               loadingStatus.textContent = 'FINALIZING DEPLOYMENT...';
+            };
+
+            xhr.onload = () => {
+                loadingBar.style.width = '100%';
+                loadingPercent.textContent = '100%';
+                loadingStatus.textContent = 'SYSTEM READY.';
+
+                try {
+                    const blob = xhr.response;
+                    lobby2BlobUrl = URL.createObjectURL(blob);
+                } catch (e) {
+                    console.error('Failed to create object URL for lobby2.webm', e);
+                }
+
+                // Background-preload assets that will be needed later
+                fetch(purchaseBg.src).catch(() => {});
+                fetch('/lobby3.webm').catch(() => {});
+
+                setTimeout(enterLobby, 800);
+            };
+
+            xhr.onerror = () => enterLobby();
+            xhr.send();
+        });
+
+        function enterLobby() {
+            // Fade out loading
+            loadingOverlay.style.opacity = '0';
+            loadingOverlay.style.pointerEvents = 'none';
+
+            // Cinematic fade-in of main environment
+            setTimeout(() => {
+                mainContainer.classList.add('fade-in');
+
+                // Unmute background video now that user has interacted
+                lobbyBg.muted = false;
+                lobbyBg.volume = 1.0;
+                if (lobbyBg.paused) {
+                    lobbyBg.play().catch(() => {
+                        // Fallback: keep muted if browser blocks unmuted autoplay
+                        lobbyBg.muted = true;
+                        lobbyBg.play().catch(() => {});
+                    });
+                }
+            }, 500);
+        }
+
+        // ==========================================
+        // PHASE 2: PROXIMITY GLOW (Mouse Tracking)
+        // ==========================================
+        document.addEventListener('mousemove', (e) => {
+            const w = window.innerWidth;
+            const x = e.clientX;
+            const threshold = w * 0.4;
+
+            if (x < threshold) {
+                glowLeft.style.opacity  = 1 - (x / threshold);
+                glowRight.style.opacity = 0;
+            } else if (x > w - threshold) {
+                glowRight.style.opacity = 1 - ((w - x) / threshold);
+                glowLeft.style.opacity  = 0;
+            } else {
+                glowLeft.style.opacity  = 0;
+                glowRight.style.opacity = 0;
+            }
+        });
+
+        // ==========================================
+        // PHASE 3: NAVIGATION (Side Zones)
+        // ==========================================
+        function navigateTo(url) {
+            playClick();
+            setTimeout(() => { window.location.href = url; }, 300);
+        }
+
+        zoneLeft.addEventListener('click',  () => navigateTo('https://thesovereign.vercel.app'));
+        zoneRight.addEventListener('click', () => navigateTo('https://neydra.vercel.app'));
+
+        // ==========================================
+        // PHASE 4: CENTER CLICK — Action Sequence
+        // ==========================================
+        zoneCenter.addEventListener('click', () => {
+            if (isVideoPlaying || isPurchaseActive) return;
+
+            isVideoPlaying = true;
+            playClick();
+
+            // Freeze background
+            lobbyBg.pause();
+            lobbyBg.classList.add('animation-paused');
+
+            // Pause theme music while action video plays (it has its own audio)
+            themeMusic.pause();
+
+            // Load and play lobby2.webm WITH SOUND
+            lobbyAction.src = lobby2BlobUrl || '/lobby2.webm';
+            lobbyAction.volume = 1.0;
+            lobbyAction.load();
+            lobbyAction.classList.remove('video-fade-out');
+            lobbyAction.classList.add('video-active');
+
+            const onActionEnd = () => {
+                lobbyAction.removeEventListener('ended', onActionEnd);
+
+                // Show purchase overlay
+                purchaseBg.classList.add('purchase-visible');
+                isPurchaseActive = true;
+                isVideoPlaying = false;
+            };
+
+            lobbyAction.addEventListener('ended', onActionEnd);
+            lobbyAction.play().catch((err) => {
+                console.error('Action video play failed:', err);
+                onActionEnd();
+            });
+        });
+
+        // ==========================================
+        // PHASE 5: PURCHASE DISMISS — Return Sequence
+        // ==========================================
+        purchaseBg.addEventListener('click', () => {
+            if (!isPurchaseActive) return;
+
+            playClick();
+
+            // Hide purchase overlay
+            purchaseBg.classList.remove('purchase-visible');
+
+            // Load and play return video (lobby3.webm) WITH SOUND
+            lobbyAction.src = '/lobby3.webm';
+            lobbyAction.volume = 1.0;
+            lobbyAction.load();
+
+            const onReturnEnd = () => {
+                lobbyAction.removeEventListener('ended', onReturnEnd);
+
+                // Fade out action video
+                lobbyAction.classList.remove('video-active');
+                lobbyAction.classList.add('video-fade-out');
+
+                // Resume lobby after fade completes
+                setTimeout(() => {
+                    lobbyBg.classList.remove('animation-paused');
+                    lobbyBg.play().catch(() => {});
+                    themeMusic.play();
+                    isPurchaseActive = false;
+                    lobbyAction.classList.remove('video-fade-out');
+                }, 1000);
+            };
+
+            lobbyAction.addEventListener('ended', onReturnEnd);
+            lobbyAction.play().catch((err) => {
+                console.error('Return video play failed:', err);
+                onReturnEnd();
+            });
+        });
+
+        // ==========================================
+        // SERVICE WORKER REGISTRATION
+        // ==========================================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then((reg) => console.log('SW registered:', reg.scope))
+                .catch((err) => console.log('SW registration failed:', err));
+        }
+
+    })();
+    </script>
+
+</Layout>
